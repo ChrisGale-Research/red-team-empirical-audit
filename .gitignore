@@ -1,0 +1,20 @@
+# R
+.Rhistory
+.RData
+.Rproj.user/
+*.Rproj
+
+# Generated output (commit selectively)
+output/*.csv
+output/*.rds
+output/*.png
+output/*.pdf
+
+# Data (don't commit large/raw)
+data/*.csv
+data/*.rds
+data/*.xlsx
+
+# OS
+.DS_Store
+Thumbs.db
