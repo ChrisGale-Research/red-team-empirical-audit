@@ -105,11 +105,8 @@ parse_rm5 <- function(rm5_path) {
 # Parse the RM5
 cat("=== Parsing RM5 file ===\n")
 # Set path explicitly — edit if RM5 is elsewhere
-rm5_path <- file.path(path.expand("~"),
-  "Documents/Research/cochrane",
-  "Benzodiazepines versus pregabalin for generalised anxiety disorder (GAD).rm5")
+rm5_path <- "data/Benzodiazepines_versus_pregabalin_for_GAD.rm5"
 rm5 <- parse_rm5(rm5_path)
-
 cat(sprintf("Studies found: %d\n", length(rm5$study_map)))
 cat(sprintf("Dichotomous data rows: %d\n", nrow(rm5$dich)))
 cat(sprintf("Continuous data rows: %d\n", nrow(rm5$cont)))
