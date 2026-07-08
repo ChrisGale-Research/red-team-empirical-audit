@@ -1,0 +1,38 @@
+cff-version: 1.2.0
+message: "If you use this software or data, please cite it using the metadata below."
+title: "Structured adversarial verification for secondary analysis of abandoned systematic reviews: a worked example"
+abstract: >-
+  Code, source RevMan 5 project file, and manuscript for a worked example
+  applying a multi-model adversarial verification pass to the secondary
+  analysis of an abandoned systematic review (benzodiazepines versus
+  pregabalin for generalised anxiety disorder). The pipeline parses the
+  RevMan 5 file natively, applies documented source-verified corrections,
+  runs the meta-analysis in metafor, and subjects the load-bearing claims
+  to a structured adversarial pass.
+type: software
+authors:
+  - family-names: Gale
+    given-names: Christopher K
+    orcid: "https://orcid.org/0000-0001-8032-765X"
+    affiliation: "Department of Psychological Medicine, University of Otago, Dunedin, New Zealand"
+  - family-names: Glue
+    given-names: Paul
+    orcid: "https://orcid.org/0000-0002-7305-2800"
+    affiliation: "Department of Psychological Medicine, University of Otago, Dunedin, New Zealand"
+  - family-names: Guaiana
+    given-names: Giuseppe
+    orcid: "https://orcid.org/0000-0003-1054-2201"
+    affiliation: "Department of Psychiatry, Schulich School of Medicine and Dentistry, Western University, London, Ontario, Canada"
+license: MIT
+repository-code: "https://github.com/ChrisGale-Research/red-team-empirical-audit"
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.21252858
+    description: "Zenodo concept DOI (resolves to the latest version)"
+keywords:
+  - meta-analysis
+  - systematic review
+  - reproducibility
+  - adversarial verification
+  - RevMan
+  - generalised anxiety disorder
