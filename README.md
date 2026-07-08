@@ -10,7 +10,7 @@ under a multi-model adversarial verification pass.
 
 ## Authors
 
-- Christopher K Gale (Department of Psychological Medicine, University of Otago, Dunedin)
+- Christopher K Gale (Dr Christopher Gale Ltd, P.O. Box 325, Warkworth, New Zealand)
 - Paul Glue (Department of Psychological Medicine, University of Otago, Dunedin)
 - Giuseppe Guaiana (St Thomas Elgin General Hospital, University of Western Ontario)
 
