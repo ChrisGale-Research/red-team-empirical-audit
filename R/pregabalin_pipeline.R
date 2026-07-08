@@ -367,13 +367,15 @@ challenges <- list(
       "in the continuous outcome, potentially dominating the pooled estimate."
     ),
     response = paste(
-      "Correction applied: SD_imputed = SE * sqrt(n).",
-      "Sensitivity analysis retains uncorrected values to quantify impact.",
-      "FLAG: Rickels 2005 Table 2 must be checked before submission.",
-      "If SD=0.8 is correct (implying near-zero variance in change scores,",
-      "which would be extraordinary), the uncorrected analysis stands."
+      "Source verification completed: Rickels 2005 Table 2 confirms the values",
+      "are ANCOVA Least Squares Mean +/- SE (SE 0.77-0.80); Table 3 footnote",
+      "states mean +/- SE explicitly. The RM5 SD=0.8 is therefore the model SE,",
+      "not a raw SD. Correction SD_imputed = SE * sqrt(n) applied as documented",
+      "in Section 2, recovering an approximate lower bound only; the HAM-A",
+      "continuous outcome is treated as descriptive. Sensitivity analysis retains",
+      "the uncorrected values to quantify impact (see Section 6)."
     ),
-    verdict  = "CORRECTED with sensitivity — verify vs source paper"
+    verdict  = "RESOLVED — source-verified (Section 2); treated as descriptive"
   ),
 
   list(
