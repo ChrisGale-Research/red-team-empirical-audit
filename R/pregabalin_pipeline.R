@@ -287,7 +287,9 @@ print(res_cgi)
 
 cat("\n=== Generating forest plots ===\n")
 
-png("preg_dropout_forest.png", width = 1200, height = 700, res = 120)
+if (!dir.exists("output")) dir.create("output")
+
+png("output/preg_dropout_forest.png", width = 1200, height = 700, res = 120)
 forest(res_dropout,
        header = c("Study (arm)", "RR [95% CI]"),
        xlab   = "Risk Ratio: Dropouts (Benzodiazepine vs Pregabalin)",
@@ -302,9 +304,9 @@ forest(res_dropout,
        col     = "steelblue",
        border  = "steelblue")
 dev.off()
-cat("Saved: preg_dropout_forest.png\n")
+cat("Saved: output/preg_dropout_forest.png\n")
 
-png("preg_hama_forest.png", width = 1200, height = 700, res = 120)
+png("output/preg_hama_forest.png", width = 1200, height = 700, res = 120)
 forest(res_hama_p,
        header = c("Study (arm)", "MD [95% CI]"),
        xlab   = "Mean Difference HAM-A (Benzodiazepine - Pregabalin)",
@@ -317,7 +319,7 @@ forest(res_hama_p,
        col     = "steelblue",
        border  = "steelblue")
 dev.off()
-cat("Saved: preg_hama_forest.png\n")
+cat("Saved: output/preg_hama_forest.png\n")
 
 # =============================================================================
 # SECTION 5: ADVERSARIAL PASS
