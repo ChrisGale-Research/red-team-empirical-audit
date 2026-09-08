@@ -1,7 +1,8 @@
 # =============================================================================
 # Benzodiazepines vs Pregabalin for GAD: Reproducible Pipeline
 # Source: Abandoned Cochrane RM5 file (Gale, last modified 2014-11-03)
-#         DOI pending Zenodo deposit
+# Deposit: https://doi.org/10.5281/zenodo.21252858 (concept DOI, latest version)
+# Repo:    https://github.com/ChrisGale-Research/red-team-empirical-audit
 #
 # Pipeline reads data natively from RevMan 5 XML (.rm5).
 # No manual transcription. Source -> parse -> correct -> analyse -> output.
@@ -10,15 +11,40 @@
 # adversarial verification. The pregabalin comparison is the worked example.
 #
 # Authors: Gale CK, Glue P, Guaiana G
-# Pipeline: AI-assisted construction (Claude Sonnet 4.6), numerical outputs
-#           verified in R/metafor by lead author.
+# Pipeline: AI-assisted construction (Claude), numerical outputs verified in
+#           R/metafor by lead author.
+#
+# Revision history
+#   v1.0.x (Jul 2026)  Initial deposit. Arm-level REML primary; rma.mv + CR2
+#                      and arm-level K-H as sensitivity; HAM-A pooled with
+#                      SE*sqrt(n) imputation.
+#   v1.1.0 (Sep 2026)  Independent import via meta::read.rm5 cross-checked
+#                      against parse_rm5(). Study-clustered estimates (rma.mv,
+#                      CR2, containment-df t, and TRUE study-level Knapp-Hartung
+#                      on arm-collapsed data) for all three dichotomous outcomes.
+#                      HAM-A demoted to sensitivity: the Rickels 2005 "SD" is an
+#                      ANCOVA SE, SE*sqrt(n) is a lower bound only, and the
+#                      outcome is NOT POOLABLE (manuscript, Error 1). The
+#                      earlier arm-level K-H (df = 6, mislabelled df = 2) is
+#                      removed. Run from the repository root.
 # =============================================================================
 
 # --- 0. Dependencies ----------------------------------------------------------
-# install.packages(c("metafor", "xml2", "dplyr", "ggplot2"))
+# meta is used only for the independent read.rm5() import (Section 1b).
+# clubSandwich supplies CR2 cluster-robust SEs (Section 6).
+for (pkg in c("metafor", "xml2", "dplyr", "meta", "clubSandwich")) {
+  if (!requireNamespace(pkg, quietly = TRUE)) install.packages(pkg)
+}
 library(metafor)
 library(xml2)
 library(dplyr)
+library(meta)
+library(clubSandwich)
+
+# Working directory must be the repository root (open the .Rproj, or setwd()).
+if (!dir.exists("data") || !dir.exists("R"))
+  stop("Run this script from the repository root (expects ./data and ./R).")
+dir.create("output", showWarnings = FALSE)
 
 # =============================================================================
 # SECTION 1: NATIVE RM5 PARSER
@@ -102,16 +128,51 @@ parse_rm5 <- function(rm5_path) {
   list(dich = dich_df, cont = cont_df, study_map = study_map)
 }
 
-# Parse the RM5
+# Parse the RM5 (repository copy; see data/README.md for provenance)
 cat("=== Parsing RM5 file ===\n")
-# Set path explicitly — edit if RM5 is elsewhere
 rm5_path <- "data/Benzodiazepines_versus_pregabalin_for_GAD.rm5"
+if (!file.exists(rm5_path)) stop("RM5 not found at ", rm5_path)
 rm5 <- parse_rm5(rm5_path)
+
 cat(sprintf("Studies found: %d\n", length(rm5$study_map)))
 cat(sprintf("Dichotomous data rows: %d\n", nrow(rm5$dich)))
 cat(sprintf("Continuous data rows: %d\n", nrow(rm5$cont)))
 cat("\nStudy map:\n")
 print(rm5$study_map)
+
+# =============================================================================
+# SECTION 1b: INDEPENDENT IMPORT VIA meta::read.rm5 AND CROSS-CHECK
+# read.rm5() has provided native RevMan 5 ingestion since 2009 (Schwarzer 2007).
+# parse_rm5() is retained as an independent route; the two must agree on row
+# counts, events and totals or the script stops. Recent meta versions steer
+# users toward read.cdir() for RevMan Web exports; read.rm5() remains the
+# correct route for a legacy .rm5 file.
+# =============================================================================
+
+cat("\n=== Cross-check: meta::read.rm5 vs parse_rm5() ===\n")
+rm5_meta <- read.rm5(rm5_path)
+
+# The file holds a single comparison (CMP-001); if a multi-comparison file is
+# substituted, restrict here with rm5_meta$complab before summing.
+if ("studlab" %in% names(rm5_meta))
+  rm5_meta <- rm5_meta[!is.na(rm5_meta$studlab) & rm5_meta$studlab != "", ]
+
+dich_meta <- rm5_meta[!is.na(rm5_meta$event.e), ]
+cont_meta <- rm5_meta[!is.na(rm5_meta$mean.e),  ]
+
+chk <- data.frame(
+  route     = c("parse_rm5", "read.rm5"),
+  dich_rows = c(nrow(rm5$dich), nrow(dich_meta)),
+  cont_rows = c(nrow(rm5$cont), nrow(cont_meta)),
+  dich_ev1  = c(sum(rm5$dich$ai,  na.rm = TRUE), sum(dich_meta$event.e, na.rm = TRUE)),
+  dich_n1   = c(sum(rm5$dich$n1i, na.rm = TRUE), sum(dich_meta$n.e,     na.rm = TRUE))
+)
+print(chk, row.names = FALSE)
+stopifnot(chk$dich_rows[1] == chk$dich_rows[2],
+          chk$cont_rows[1] == chk$cont_rows[2],
+          chk$dich_ev1[1]  == chk$dich_ev1[2],
+          chk$dich_n1[1]   == chk$dich_n1[2])
+cat("read.rm5 and parse_rm5 agree on row counts, events and totals.\n")
 
 # =============================================================================
 # SECTION 2: DATA CORRECTIONS AND VERIFIED EXTRACTION ERRORS
@@ -139,7 +200,12 @@ cat("        Tables 2 and 3 verified against RM5 extraction\n\n")
 # UNDERESTIMATE the true raw SD. The raw SDs are not reported in the paper.
 # Neither the uncorrected (SE=0.8) nor the corrected (SD=SE*sqrt(n)) values
 # are accurate; both bracket the true value from below.
-# The HAM-A continuous outcome should be treated as descriptive only.
+#
+# STATUS (v1.1.0): the source paper (Table 2) has been checked and confirms the
+# 0.8 values are ANCOVA SEs. The manuscript therefore treats HAM-A as NOT
+# POOLABLE and omits it from the results table. The SE*sqrt(n) imputation below
+# is retained ONLY so the magnitude of the extraction error can be shown as a
+# sensitivity analysis (Section 3d). It is not a correction and is not a result.
 
 cat("VERIFIED ERROR 1: SE extracted as SD (Rickels 2005 HAM-A)\n")
 cat("  Source: Table 2 reports ANCOVA Least Squares Mean ± SE\n")
@@ -235,9 +301,14 @@ res_dropout <- rma(yi, vi, data = es_dropout, method = "REML")
 cat("Random-effects model (REML):\n")
 print(res_dropout)
 
-# --- 3d. HAM-A continuous — CMP-001.06 (with SD correction) ---
-cat("\n--- Outcome 6: HAM-A mean difference (continuous) ---\n")
-cat("NOTE: Rickels 2005 SD corrected from SE=0.8; Pande 2003 SD_benzo=20.83 flagged\n")
+# --- 3d. HAM-A continuous — CMP-001.06 — SENSITIVITY ONLY, NOT POOLABLE ---
+# Rickels 2005 "SD" = ANCOVA SE; raw SDs are not recoverable (SE*sqrt(n) is a
+# lower bound). Per manuscript Error 1, HAM-A is NOT POOLABLE and is excluded
+# from the results table (Section 8). The fits below document the size of the
+# extraction error and nothing more.
+cat("\n--- Outcome 6: HAM-A mean difference — SENSITIVITY ONLY (not poolable) ---\n")
+cat("NOTE: Rickels 2005 SD=0.8 is an ANCOVA SE; SE*sqrt(n) imputation is a lower bound.\n")
+cat("      Pande 2003 SD_benzo=20.83 flagged, unverified. Outcome NOT reported as a result.\n")
 
 d_hama <- rm5$cont %>% filter(outcome_id == "CMP-001.06")
 es_hama_p <- escalc(measure = "MD",
@@ -245,7 +316,7 @@ es_hama_p <- escalc(measure = "MD",
                     m2i = m2i, sd2i = sd2i,     n2i = n2i,
                     data = d_hama, slab = paste(study, order))
 res_hama_p <- rma(yi, vi, data = es_hama_p, method = "REML")
-cat("Random-effects model (REML, corrected SDs):\n")
+cat("Random-effects model (REML, imputed lower-bound SDs):\n")
 print(res_hama_p)
 
 # Sensitivity: exclude Pande 2003 (outlier SD)
@@ -286,8 +357,9 @@ print(res_cgi)
 # =============================================================================
 
 cat("\n=== Generating forest plots ===\n")
-
-if (!dir.exists("output")) dir.create("output")
+# Only the dropout plot is produced. The HAM-A forest plot from v1.0.x is
+# withdrawn: a forest plot of an outcome the manuscript declares not poolable
+# would contradict the paper.
 
 png("output/preg_dropout_forest.png", width = 1200, height = 700, res = 120)
 forest(res_dropout,
@@ -305,21 +377,6 @@ forest(res_dropout,
        border  = "steelblue")
 dev.off()
 cat("Saved: output/preg_dropout_forest.png\n")
-
-png("output/preg_hama_forest.png", width = 1200, height = 700, res = 120)
-forest(res_hama_p,
-       header = c("Study (arm)", "MD [95% CI]"),
-       xlab   = "Mean Difference HAM-A (Benzodiazepine - Pregabalin)",
-       mlab   = sprintf("RE Model (REML): MD = %.2f [%.2f, %.2f], I\u00B2=%.0f%%",
-                        res_hama_p$beta,
-                        res_hama_p$ci.lb,
-                        res_hama_p$ci.ub,
-                        res_hama_p$I2),
-       refline = 0,
-       col     = "steelblue",
-       border  = "steelblue")
-dev.off()
-cat("Saved: output/preg_hama_forest.png\n")
 
 # =============================================================================
 # SECTION 5: ADVERSARIAL PASS
@@ -367,15 +424,15 @@ challenges <- list(
       "in the continuous outcome, potentially dominating the pooled estimate."
     ),
     response = paste(
-      "Source verification completed: Rickels 2005 Table 2 confirms the values",
-      "are ANCOVA Least Squares Mean +/- SE (SE 0.77-0.80); Table 3 footnote",
-      "states mean +/- SE explicitly. The RM5 SD=0.8 is therefore the model SE,",
-      "not a raw SD. Correction SD_imputed = SE * sqrt(n) applied as documented",
-      "in Section 2, recovering an approximate lower bound only; the HAM-A",
-      "continuous outcome is treated as descriptive. Sensitivity analysis retains",
-      "the uncorrected values to quantify impact (see Section 6)."
+      "Source checked: Rickels 2005 Table 2 reports ANCOVA least-squares",
+      "means +/- SE, so 0.8 is a model SE, not a raw SD. SE * sqrt(n) recovers",
+      "a raw SD only for a simple mean; for an ANCOVA SE it is a lower bound",
+      "and not a valid correction. Raw SDs are not reported. The HAM-A",
+      "continuous outcome is therefore NOT POOLABLE and is withdrawn from the",
+      "results table. Imputed and uncorrected fits are retained in Section 3d",
+      "solely to document the magnitude of the extraction error."
     ),
-    verdict  = "RESOLVED — source-verified (Section 2); treated as descriptive"
+    verdict  = "CONFIRMED — outcome withdrawn from pooling; sensitivity only (Section 3d)"
   ),
 
   list(
@@ -412,12 +469,16 @@ challenges <- list(
     ),
     response = paste(
       "Agreed. The paper explicitly frames this as a methods demonstration,",
-      "not a clinical evidence synthesis. Pooled estimates are reported with",
-      "appropriate uncertainty. Knapp-Hartung adjustment applied as",
-      "sensitivity (argument 'test=knha' in rma()) to produce t-based CIs.",
-      "The clinical bottom line paragraph notes k=3 limitation prominently."
+      "not a clinical evidence synthesis. Study-clustered estimates are",
+      "reported alongside the arm-level primary: rma.mv with study random",
+      "intercept, CR2 cluster-robust SE with Satterthwaite df, and a true",
+      "study-level Knapp-Hartung interval (arms collapsed to one row per",
+      "study, rma() with test='knha', df = 2). Note: an earlier version",
+      "applied test='knha' to the seven arm rows (df = 6) and labelled it",
+      "df = 2; that is removed. All small-sample corrections have uncertain",
+      "coverage at k = 3 (Partlett & Riley 2017)."
     ),
-    verdict  = "ACCEPTABLE for methods paper — K-H sensitivity added (Section 6)"
+    verdict  = "ACCEPTABLE for methods paper — study-clustered estimates in Section 6"
   ),
 
   list(
@@ -450,77 +511,93 @@ for (ch in challenges) {
 }
 
 # =============================================================================
-# SECTION 6: SENSITIVITY ANALYSES FROM ADVERSARIAL PASS
-# Updated following Triveritas model review (DeepSeek R1, Qwen3-235B):
-# - clubSandwich small-sample correction added to rma.mv (Pustejovsky & Tipton 2021)
-# - I² suppressed at k=3; reported as "not interpretable" per Cochrane Handbook 10.10.4
+# SECTION 6: STUDY-CLUSTERED ESTIMATES (Challenges 1 and 4)
+# Four estimators for each dichotomous outcome, each labelled by what it is:
+#   (i)   rma.mv on arm-level rows, random intercept per study; Wald CI
+#   (ii)  same fit, CR2 cluster-robust SE with Satterthwaite df (clubSandwich;
+#         Pustejovsky & Tipton 2021). CR2 changes the variance, not the point.
+#   (iii) same fit, t-based inference with containment df (metafor test="t").
+#         This is NOT Knapp-Hartung; metafor has no K-H for rma.mv.
+#   (iv)  TRUE Knapp-Hartung: arms collapsed to one row per study, then
+#         rma(test="knha") on k = 3 studies (df = 2).
+# I^2 is not reported at k = 3 (Cochrane Handbook 10.10.4; Higgins 2003).
+#
+# Collapse rule for (iv): pregabalin (group 2) arms are summed within study.
+# The shared benzodiazepine arm (group 1) is counted once: taken from the first
+# row when RevMan repeated it identically (Feltner 34/34), summed when RevMan
+# split it across comparisons (Rickels 29/29/30 -> 88).
 # =============================================================================
 
-cat("\n=== Sensitivity: rma.mv + clubSandwich (Challenge 1) ===\n")
-cat("NOTE: I² not reported at k=3 — estimator has high variance and is uninformative\n")
+cat("\n=== Study-clustered estimates (Table 4 columns) ===\n")
+cat("NOTE: I^2 not reported at k=3 — estimator has high variance and is uninformative\n")
 cat("      (Cochrane Handbook 10.10.4; Higgins et al. 2003)\n\n")
 
-# install.packages("clubSandwich") if needed
-if (!requireNamespace("clubSandwich", quietly = TRUE)) {
-  cat("clubSandwich not installed — install with: install.packages('clubSandwich')\n")
-  cat("Falling back to standard rma.mv without small-sample correction\n\n")
-  use_club <- FALSE
-} else {
-  library(clubSandwich)
-  use_club <- TRUE
+collapse_to_study <- function(es) {
+  stopifnot(all(c("ai", "n1i", "ci", "n2i", "study") %in% names(es)))
+  out <- lapply(split(es, es$study), function(d) {
+    benzo_repeated <- nrow(d) > 1 &&
+      length(unique(d$n1i)) == 1 && length(unique(d$ai)) == 1
+    data.frame(
+      study = d$study[1],
+      ai  = if (benzo_repeated) d$ai[1]  else sum(d$ai),
+      n1i = if (benzo_repeated) d$n1i[1] else sum(d$n1i),
+      ci  = sum(d$ci),
+      n2i = sum(d$n2i),
+      stringsAsFactors = FALSE
+    )
+  })
+  do.call(rbind, out)
 }
 
-# Response rate (50% decrease) — cluster by study
-es_resp50$study_factor <- as.factor(es_resp50$study)
-res_mv_resp <- rma.mv(yi, vi,
-                      random = ~ 1 | study_factor,
-                      data   = es_resp50,
-                      method = "REML")
-cat("rma.mv (study as cluster) — Response rate 50%:\n")
-print(res_mv_resp)
-
-if (use_club) {
-  cs_resp <- coef_test(res_mv_resp, vcov = "CR2",
-                       cluster = es_resp50$study_factor)
-  cat("\nclubSandwich CR2 (Satterthwaite df) — Response rate 50%:\n")
-  print(cs_resp)
+cluster_fit <- function(es, label) {
+  es$study_factor <- as.factor(es$study)
+  mv  <- rma.mv(yi, vi, random = ~ 1 | study_factor, data = es, method = "REML")
+  cr2 <- coef_test(mv, vcov = "CR2", cluster = es$study_factor)
+  tc  <- rma.mv(yi, vi, random = ~ 1 | study_factor, data = es,
+                method = "REML", test = "t", dfs = "contain")
+  es_s <- collapse_to_study(es)
+  kh  <- rma(measure = "RR", ai = ai, n1i = n1i, ci = ci, n2i = n2i,
+             data = es_s, method = "REML", test = "knha")
+  data.frame(
+    outcome      = label,
+    k_arms       = nrow(es),
+    k_studies    = nlevels(es$study_factor),
+    rr_mv        = exp(mv$beta[1]),
+    ci_mv        = sprintf("[%.2f, %.2f]", exp(mv$ci.lb), exp(mv$ci.ub)),
+    rr_cr2       = exp(cr2$beta),
+    p_cr2        = cr2$p_Satt,
+    df_satt      = cr2$df_Satt,
+    ci_t_contain = sprintf("[%.2f, %.2f]", exp(tc$ci.lb), exp(tc$ci.ub)),
+    df_contain   = tc$ddf,
+    rr_kh        = exp(kh$beta[1]),
+    ci_kh        = sprintf("[%.2f, %.2f]", exp(kh$ci.lb), exp(kh$ci.ub)),
+    df_kh        = kh$k - 1,
+    tau2_kh      = kh$tau2,
+    stringsAsFactors = FALSE
+  )
 }
 
-# Dropouts — cluster by study (primary outcome)
-es_dropout$study_factor <- as.factor(es_dropout$study)
-res_mv_drop <- rma.mv(yi, vi,
-                      random = ~ 1 | study_factor,
-                      data   = es_dropout,
-                      method = "REML")
-cat("\nrma.mv (study as cluster) — Dropouts:\n")
-print(res_mv_drop)
+tab4 <- rbind(
+  cluster_fit(es_dropout,   "Dropout, any cause"),
+  cluster_fit(es_resp50,    "Response, >=50% HAM-A reduction"),
+  cluster_fit(es_resp_auth, "Response, author-defined")
+)
+print(tab4, row.names = FALSE, digits = 3)
+write.csv(tab4, "output/table4_clustered_estimates.csv", row.names = FALSE)
+cat("\nSaved: output/table4_clustered_estimates.csv\n")
+cat("\nNotes:\n")
+cat("  rma.mv variance component may hit the zero floor at 3 clusters.\n")
+cat("  CR2/Satterthwaite df ~ 2; coverage uncertain (Partlett & Riley 2017).\n")
+cat("  ci_t_contain is t-based with containment df, not Knapp-Hartung.\n")
+cat("  ci_kh is Knapp-Hartung on study-collapsed data (k = 3, df = 2).\n")
 
-if (use_club) {
-  cs_drop <- coef_test(res_mv_drop, vcov = "CR2",
-                       cluster = es_dropout$study_factor)
-  cat("\nclubSandwich CR2 (Satterthwaite df) — Dropouts:\n")
-  print(cs_drop)
-  cat(sprintf("\nDropout RR (clubSandwich): %.2f, p = %.4f\n",
-              exp(cs_drop$beta), cs_drop$p_Satt))
-}
-
-cat("\n=== Sensitivity: Knapp-Hartung adjustment (Challenge 4) ===\n")
-cat("K-H adjustment applies t-distribution with k-1 df.\n")
-cat("At k=3 studies, df=2 — coverage still uncertain (Partlett & Riley 2017)\n\n")
-
-res_dropout_kh <- rma(yi, vi, data = es_dropout,
-                      method = "REML", test = "knha")
-cat("Dropouts with K-H adjustment (t-based CI, df=2):\n")
-print(res_dropout_kh)
-cat(sprintf("Standard CI (z):  RR [%.3f, %.3f]\n",
-            exp(res_dropout$ci.lb), exp(res_dropout$ci.ub)))
-cat(sprintf("K-H CI (t, df=2): RR [%.3f, %.3f]\n",
-            exp(res_dropout_kh$ci.lb), exp(res_dropout_kh$ci.ub)))
-if (use_club) {
-  cat(sprintf("clubSandwich CI:  see CR2 output above\n"))
-}
-cat("\nNote: All three intervals agree in direction. Width differences\n")
-cat("reflect different small-sample corrections — none is fully reliable at k=3.\n")
+# --- 6b. HAM-A: sensitivity only, NOT a result --------------------------------
+cat("\n=== HAM-A (SENSITIVITY ONLY — not reported as a result) ===\n")
+cat(sprintf("Imputed SD (lower bound): MD %.2f [%.2f, %.2f]\n",
+            res_hama_p$beta, res_hama_p$ci.lb, res_hama_p$ci.ub))
+cat(sprintf("Uncorrected (as RevMan):  MD %.2f [%.2f, %.2f]\n",
+            res_hama_uncorr$beta, res_hama_uncorr$ci.lb, res_hama_uncorr$ci.ub))
+cat("Pande 2003 benzodiazepine SD = 20.83 remains unverified.\n")
 
 # =============================================================================
 # SECTION 7: PARSER VALIDATION
@@ -557,68 +634,32 @@ for (outcome in xml_find_all(doc_val, ".//DICH_OUTCOME")) {
 }
 
 # =============================================================================
-# SECTION 8: SUMMARY TABLE
+# SECTION 8: SUMMARY TABLE (manuscript Table 4 basis)
+# HAM-A is excluded (not poolable, Section 3d). CGI is a single study.
 # =============================================================================
 
-cat("\n=== Summary of primary results ===\n")
+cat("\n=== Summary (Table 4 basis) ===\n")
+cat("NOTE: I^2 marked [NI] = Not Interpretable at k=3 studies.\n\n")
 
 summary_table <- data.frame(
-  Outcome = c(
-    "Response (50% HAM-A decrease)",
-    "Response (author defined)",
-    "Dropouts (acceptability)",
-    "HAM-A mean difference (corrected)",
-    "HAM-A mean difference (uncorrected)",
-    "CGI mean difference"
+  Outcome   = c(tab4$outcome, "CGI improvement (Rickels 2005 only)"),
+  k_studies = c(tab4$k_studies, 1L),
+  k_arms    = c(tab4$k_arms, nrow(es_cgi)),
+  Arm_level_REML = c(
+    sprintf("RR=%.2f [%.2f, %.2f]", exp(res_dropout$beta),   exp(res_dropout$ci.lb),   exp(res_dropout$ci.ub)),
+    sprintf("RR=%.2f [%.2f, %.2f]", exp(res_resp50$beta),    exp(res_resp50$ci.lb),    exp(res_resp50$ci.ub)),
+    sprintf("RR=%.2f [%.2f, %.2f]", exp(res_resp_auth$beta), exp(res_resp_auth$ci.lb), exp(res_resp_auth$ci.ub)),
+    sprintf("MD=%.2f [%.2f, %.2f]", res_cgi$beta, res_cgi$ci.lb, res_cgi$ci.ub)
   ),
-  k_arms = c(
-    nrow(es_resp50),
-    nrow(es_resp_auth),
-    nrow(es_dropout),
-    nrow(es_hama_p),
-    nrow(es_hama_p),
-    nrow(es_cgi)
-  ),
-  Estimate = c(
-    sprintf("RR=%.2f", exp(res_resp50$beta)),
-    sprintf("RR=%.2f", exp(res_resp_auth$beta)),
-    sprintf("RR=%.2f", exp(res_dropout$beta)),
-    sprintf("MD=%.2f", res_hama_p$beta),
-    sprintf("MD=%.2f", res_hama_uncorr$beta),
-    sprintf("MD=%.2f", res_cgi$beta)
-  ),
-  CI_95 = c(
-    sprintf("[%.2f, %.2f]", exp(res_resp50$ci.lb),    exp(res_resp50$ci.ub)),
-    sprintf("[%.2f, %.2f]", exp(res_resp_auth$ci.lb), exp(res_resp_auth$ci.ub)),
-    sprintf("[%.2f, %.2f]", exp(res_dropout$ci.lb),   exp(res_dropout$ci.ub)),
-    sprintf("[%.2f, %.2f]", res_hama_p$ci.lb,         res_hama_p$ci.ub),
-    sprintf("[%.2f, %.2f]", res_hama_uncorr$ci.lb,    res_hama_uncorr$ci.ub),
-    sprintf("[%.2f, %.2f]", res_cgi$ci.lb,            res_cgi$ci.ub)
-  ),
-  p = c(
-    sprintf("%.3f", res_resp50$pval),
-    sprintf("%.3f", res_resp_auth$pval),
-    sprintf("%.4f", res_dropout$pval),
-    sprintf("%.3f", res_hama_p$pval),
-    sprintf("%.3f", res_hama_uncorr$pval),
-    sprintf("%.3f", res_cgi$pval)
-  ),
-  I2 = c(
-    sprintf("%.0f%% [NI]", res_resp50$I2),
-    sprintf("%.0f%% [NI]", res_resp_auth$I2),
-    sprintf("%.0f%% [NI]", res_dropout$I2),
-    sprintf("%.0f%% [NI]", res_hama_p$I2),
-    sprintf("%.0f%% [NI]", res_hama_uncorr$I2),
-    sprintf("%.0f%% [NI]", res_cgi$I2)
-  ),
+  Clustered_rma_mv = c(sprintf("RR=%.2f %s", tab4$rr_mv, tab4$ci_mv), "n/a (single study)"),
+  CR2_p_df         = c(sprintf("p=%.3f (%.2f)", tab4$p_cr2, tab4$df_satt), "n/a"),
+  KH_study_level   = c(tab4$ci_kh, "n/a"),
+  I2               = c(rep("[NI]", nrow(tab4)), "undefined (within-study arms)"),
   stringsAsFactors = FALSE
 )
-
-cat("\nNOTE: I² marked [NI] = Not Interpretable at k=3 studies.\n")
-cat("I² has high variance and is biased at small k (Cochrane Handbook 10.10.4).\n")
-cat("Values retained for completeness only — do not interpret magnitude.\n\n")
-
 print(summary_table, row.names = FALSE)
+write.csv(summary_table, "output/summary_table.csv", row.names = FALSE)
+cat("HAM-A change (continuous): not poolable (SE recorded as SD) — see Section 3d.\n")
 
 # =============================================================================
 # SECTION 9: REPRODUCIBILITY
@@ -627,11 +668,18 @@ print(summary_table, row.names = FALSE)
 cat("\n=== Reproducibility ===\n")
 cat(sprintf("R version   : %s\n", R.version.string))
 cat(sprintf("metafor     : %s\n", packageVersion("metafor")))
+cat(sprintf("meta        : %s\n", packageVersion("meta")))
+cat(sprintf("clubSandwich: %s\n", packageVersion("clubSandwich")))
 cat(sprintf("xml2        : %s\n", packageVersion("xml2")))
 cat(sprintf("Analysis    : %s\n", Sys.time()))
 cat(sprintf("Source file : %s\n", rm5_path))
-cat("Parser reads RM5 natively — no manual transcription step.\n")
+cat("Parser reads RM5 natively — no manual transcription step; cross-checked\n")
+cat("against meta::read.rm5 (Section 1b).\n")
 cat("AI assistance: pipeline construction, adversarial pass (Section 5).\n")
 cat("Numerical outputs: R/metafor. Author verification required.\n")
 cat("Data corrections: Section 2. Flagged items require paper verification.\n")
+
+# Pin the environment in the repository (committed; output/ is not).
+writeLines(capture.output(sessionInfo()), "sessionInfo.txt")
+cat("Saved: sessionInfo.txt\n")
 cat("\n=== END ===\n")
