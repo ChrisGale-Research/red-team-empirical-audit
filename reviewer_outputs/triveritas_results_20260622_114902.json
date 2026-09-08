@@ -1,0 +1,60 @@
+{
+  "run_id": "20260622_114902",
+  "paper": "Resurrecting abandoned systematic reviews (Gale, Glue, Guaiana)",
+  "reviews": [
+    {
+      "axis": "L",
+      "label": "DeepSeek-R1 (OW)",
+      "model": "deepseek-reasoner",
+      "open_weight": true,
+      "status": "OK",
+      "grade": null,
+      "elapsed_s": 32.7,
+      "response": "## SUMMARY (2-3 sentences):\nThis manuscript presents a reproducible R pipeline for parsing RevMan 5 (.rm5) files,",
+      "error": null
+    },
+    {
+      "axis": "M",
+      "label": "Qwen3-235B (OW/OR)",
+      "model": "qwen/qwen3-235b-a22b",
+      "open_weight": true,
+      "status": "OK",
+      "grade": 0,
+      "elapsed_s": 20.7,
+      "response": "SUMMARY (2-3 sentences):  \nThe paper presents an R pipeline for reproducibly analyzing abandoned RevMan 5 files, emphasizing structured adversarial verification to enhance transparency and auditability. It demonstrates the tool using a benzodiazepine-pregabalin comparison (k=3), identifying data errors and structural issues while producing metafor-based outputs with robust statistical adjustments.\n\nMAJOR CONCERNS:  \n1. **Small k reliability**: At k=3, REML estimation of τ² is inherently unreliable, and I² values are uninterpretable (Challenge 4). The authors acknowledge this but still report τ²=0.013 and I²=11% for dropout outcomes. With such low k, these heterogeneity metrics lack precision and risk misleading interpretation.  \n2. **Unit-of-analysis inflation**: The analysis retains seven arms from three studies (e.g., multiple pregabalin doses sharing a single comparator), inflating degrees of freedom. While rma.mv() clusters arms within studies, the model does not explicitly account for correlated effects from shared comparators, potentially underestimating uncertainty.  \n3. **Unverified SD correction**: The Rickels 2005 SD correction (SE×√n) remains unverified against the original publication. Though documented as a sensitivity, this unconfirmed adjustment could bias continuous outcome results if incorrect.  \n4. **Knapp-Hartung coverage**: For dropout outcomes (k=7 arms, 3 studies), Knapp-Hartung CIs (1.26–2.52) are appropriately reported but underemphasized compared to z-based intervals. The paper should clarify how this adjustment affects inference robustness.  \n\nMINOR CONCERNS:  \n- The adversarial verification framework lacks comparison to existing methods (e.g., pre-registration, sensitivity analyses) to highlight its novelty.  \n- Tables could better integrate adversarial outcomes (e.g., Table 2) to show how corrections impacted estimates.  \n- Discussion of sponsorship bias (Challenge 3) could expand on how industry funding might influence effect sizes in small, homogeneous datasets.  \n\nRECOMMENDATION (0-5):  \n3  \n\nGRADE RATIONALE (1-2 sentences):  \nThe pipeline’s methodological contributions (reproducibility, adversarial verification) are strong, but statistical limitations at k=3 and the unverified SD correction require addressing. Specific fixes (e.g., clarifying heterogeneity reporting, confirming SD values) are needed to ensure analytical rigor.",
+      "error": null
+    },
+    {
+      "axis": "E",
+      "label": "Mistral-7B (OW/OR)",
+      "model": "mistralai/mistral-7b-instruct",
+      "open_weight": true,
+      "status": "ERROR",
+      "grade": null,
+      "elapsed_s": 0.2,
+      "response": null,
+      "error": "Error code: 404 - {'error': {'message': 'No endpoints found for mistralai/mistral-7b-instruct.', 'code': 404}, 'user_id': 'user_[REDACTED]'}"
+    },
+    {
+      "axis": "N",
+      "label": "Gemini 2.0 Flash",
+      "model": "gemini-2.0-flash",
+      "open_weight": false,
+      "status": "ERROR",
+      "grade": null,
+      "elapsed_s": 0.7,
+      "response": null,
+      "error": "429 Client Error: Too Many Requests for url: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=[REDACTED]"
+    }
+  ],
+  "summary": {
+    "grades": {
+      "DeepSeek-R1 (OW)": null,
+      "Qwen3-235B (OW/OR)": 0
+    },
+    "mean_all": 0.0,
+    "mean_open_weight": 0.0,
+    "mean_proprietary": null,
+    "spread": null
+  }
+}

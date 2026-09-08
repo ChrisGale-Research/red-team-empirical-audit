@@ -1,0 +1,57 @@
+{
+  "run_id": "20260622_120341",
+  "paper": "Resurrecting abandoned systematic reviews (Gale, Glue, Guaiana)",
+  "reviews": [
+    {
+      "axis": "L",
+      "label": "DeepSeek-R1 (OW)",
+      "model": "deepseek-reasoner",
+      "open_weight": true,
+      "status": "ERROR",
+      "grade": null,
+      "elapsed_s": 0.3,
+      "response": null,
+      "error": "DEEPSEEK_API_KEY not set — platform.deepseek.com -> API keys"
+    },
+    {
+      "axis": "M",
+      "label": "Qwen3-235B (OW/OR)",
+      "model": "qwen/qwen3-235b-a22b",
+      "open_weight": true,
+      "status": "ERROR",
+      "grade": null,
+      "elapsed_s": 0.0,
+      "response": null,
+      "error": "OPENROUTER_API_KEY not set — openrouter.ai -> Keys"
+    },
+    {
+      "axis": "E",
+      "label": "Mistral-7B (OW/OR)",
+      "model": "mistralai/mistral-7b-instruct:free",
+      "open_weight": true,
+      "status": "ERROR",
+      "grade": null,
+      "elapsed_s": 0.0,
+      "response": null,
+      "error": "OPENROUTER_API_KEY not set — openrouter.ai -> Keys"
+    },
+    {
+      "axis": "N",
+      "label": "Gemini 1.5 Flash",
+      "model": "gemini-1.5-flash",
+      "open_weight": false,
+      "status": "ERROR",
+      "grade": null,
+      "elapsed_s": 0.0,
+      "response": null,
+      "error": "GOOGLE_API_KEY not set — aistudio.google.com -> Get API key"
+    }
+  ],
+  "summary": {
+    "grades": {},
+    "mean_all": null,
+    "mean_open_weight": null,
+    "mean_proprietary": null,
+    "spread": null
+  }
+}

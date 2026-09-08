@@ -1,0 +1,57 @@
+{
+  "run_id": "20260622_085517",
+  "paper": "Resurrecting abandoned systematic reviews (Gale, Glue, Guaiana)",
+  "reviews": [
+    {
+      "axis": "L",
+      "label": "DeepSeek-R1 (OW)",
+      "model": "deepseek-reasoner",
+      "open_weight": true,
+      "status": "ERROR",
+      "grade": null,
+      "elapsed_s": 1.3,
+      "response": null,
+      "error": "Error code: 402 - {'error': {'message': 'Insufficient Balance', 'type': 'unknown_error', 'param': None, 'code': 'invalid_request_error'}}"
+    },
+    {
+      "axis": "M",
+      "label": "Qwen3-235B (OW/OR)",
+      "model": "qwen/qwen3-235b-a22b",
+      "open_weight": true,
+      "status": "ERROR",
+      "grade": null,
+      "elapsed_s": 0.5,
+      "response": null,
+      "error": "Error code: 402 - {'error': {'message': 'Insufficient credits. This account never purchased credits. Make sure your key is on the correct account or org, and if so, purchase more at https://openrouter.ai/settings/credits', 'code': 402}}"
+    },
+    {
+      "axis": "E",
+      "label": "GLM-5 (OW/OR)",
+      "model": "z-ai/glm-5",
+      "open_weight": true,
+      "status": "ERROR",
+      "grade": null,
+      "elapsed_s": 0.2,
+      "response": null,
+      "error": "Error code: 402 - {'error': {'message': 'Insufficient credits. This account never purchased credits. Make sure your key is on the correct account or org, and if so, purchase more at https://openrouter.ai/settings/credits', 'code': 402}}"
+    },
+    {
+      "axis": "N",
+      "label": "Gemini 2.0 Flash",
+      "model": "gemini-2.0-flash",
+      "open_weight": false,
+      "status": "ERROR",
+      "grade": null,
+      "elapsed_s": 0.7,
+      "response": null,
+      "error": "429 Client Error: Too Many Requests for url: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=[REDACTED]"
+    }
+  ],
+  "summary": {
+    "grades": {},
+    "mean_all": null,
+    "mean_open_weight": null,
+    "mean_proprietary": null,
+    "spread": null
+  }
+}

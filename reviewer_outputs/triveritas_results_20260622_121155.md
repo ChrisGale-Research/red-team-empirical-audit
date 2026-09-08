@@ -1,0 +1,76 @@
+# Triveritas Review Report
+**Run:** 20260622_121155  
+**Paper:** Resurrecting abandoned systematic reviews (Gale, Glue, Guaiana)
+
+## Grade Summary
+
+| Model | Axis | Open-weight | Grade |
+|---|---|---|---|
+| DeepSeek-R1 (OW) | L | ✓ | ERR |
+| Qwen3-235B (OW/OR) | M | ✓ | 0 |
+| Mistral-7B (OW/OR) | E | ✓ | ERR |
+| Gemini 1.5 Flash | N | — | ERR |
+
+**Mean (all):** 0.0  
+**Mean (open-weight):** 0.0  
+**Mean (proprietary):** None  
+**Spread:** None  
+
+## Individual Reviews
+
+---
+### [L] DeepSeek-R1 (OW)
+**Model:** `deepseek-reasoner` | **Grade:** None | **Open-weight:** Yes | **Time:** 21.8s
+
+**SUMMARY (2-3 sentences):**  
+This manuscript presents a reproducible R pipeline for ingesting RevMan 5 (.rm5) XML files, with structured adversarial verification applied before analysis. The pipeline is demonstrated on an abandoned three-study Cochrane review of benzodiazepines vs. pregabalin for generalized anxiety disorder, recovering all data exactly and identifying one extraction error. The authors position the work as a methods contribution to recovering abandoned systematic review data.
+
+**MAJOR CONCERNS:**  
+
+1. **Overstated parser generalizability based on single example.** The parser is validated on only one .rm5 file (k=3, simple two-arm and multi-arm structure). No evidence is provided that the XPath-based extraction handles complex subgroup structures, multiple comparisons, mixed dichotomous/continuous outcomes, or nested nodes found in larger RevMan files. A “robustness test” on at least 3-5 heterogeneous .rm5 files (e.g., from different Cochrane review groups) is needed before claiming general applicability.
+
+2. **I² reporting at k<5.** The manuscript reports I² = 11% (dropouts, 7 arms, 3 studies) and I² = 34% (response, 6 arms). The Cochrane Handbook (Section 10.10.4) and meta-analytic literature strongly discourage reporting I² when the number of studies is small (e.g., k < 10) because the estimator has very high variance and is biased. The authors acknowledge τ² unreliability (Challenge 4) but then still compute and interpret I². At k=3, the I² value is essentially uninformative. The paper should either suppress I² entirely or provide a clear caveat that it is not interpretable.
+
+3. **Knapp-Hartung coverage at k=3.** The primary outcome (dropouts) uses Knapp-Hartung adjustment with k=7 arms but only k=3 studies. The Hartung-Knapp-Sidik-Jonkman method is known to be still anticonservative when k ≤ 5 and the number of studies is very small (see Partlett & Riley, 2017). The coverage of the reported 95% CI (1.26–2.52) under k=3 is uncertain. The authors should report the estimated between-study heterogeneity τ², its 95% CI, and discuss the limited coverage of the HKSJ interval at such small k.
+
+4. **Unverified data correction.** The SD correction for Rickels 2005 is stated as “verification against the original publication table is required before submission,” yet the manuscript is submitted for review. This means the primary analysis (using corrected SDs = SE × √n) is not confirmed. If the SD=0.8 is actually correct (e.g., a typo in RevMan), the corrected analysis is invalid. The authors must verify and update the manuscript, or clearly mark the analysis as provisional. As submitted, it is a gap in the evidence base for the pipeline.
+
+5. **Cluster-robust variance estimation with k=3 clusters.** The `rma.mv()` sensitivity uses study as a random effect, but with only 3 clusters, the REML estimate of the between-study variance is highly imprecise and the Wald-type confidence interval may be severely anticonservative. The paper should at minimum use a small-sample correction like the `clubSandwich` package (Pustejovsky & Tipton, 2021) with Satterthwaite degrees of freedom, and report the estimated cluster-level variance and its 95% profile likelihood interval.
+
+6. **“Ground truth” validation is post-hoc and circular.** The discussion claims the pipeline “produced the right answer” because the dropout RR direction aligns with a later network meta-analysis (Slee 2019). This is not a valid validation: (a) the network meta-analysis includes additional studies, (b) the effect size may differ substantially, and (c) this reasoning is only available for abandoned reviews that have been superseded. The pipeline should be validated against a known correct reference (e
+
+---
+### [M] Qwen3-235B (OW/OR)
+**Model:** `qwen/qwen3-235b-a22b` | **Grade:** 0 | **Open-weight:** Yes | **Time:** 22.8s
+
+SUMMARY (2-3 sentences):  
+The paper presents a reproducible R pipeline for analyzing RevMan 5 XML files, incorporating structured adversarial verification to address data transcription errors, unit-of-analysis problems, and reproducibility gaps. It demonstrates the tool using an abandoned Cochrane review comparing benzodiazepines and pregabalin for generalized anxiety disorder, recovering RevMan statistics, correcting data errors, and producing results consistent with larger evidence syntheses.  
+
+MAJOR CONCERNS:  
+1. **Tau² reliability and I² misinterpretation at k=3**: The analysis acknowledges REML τ² estimation bias at k < 5 but reports I² values (e.g., I²=11% for dropouts) without caveats about their unreliability in small samples. This risks overinterpreting heterogeneity estimates.  
+2. **Unit-of-analysis inflation**: While rma.mv() with study-level clustering addresses dependence, the primary analysis retains arm-level data (k=7 arms for dropout outcomes), inflating degrees of freedom and potentially underestimating uncertainty. Robust variance estimation (e.g., clubSandwich) would strengthen inference.  
+3. **Knapp-Hartung coverage**: The paper reports Knapp-Hartung-adjusted CIs but does not fully integrate them into metafor’s rma.mv() workflow (e.g., via `test="knha"`), which may leave residual conservatism concerns unaddressed.  
+4. **SD correction verification gap**: The Rickels 2005 SD correction relies on imputation without original source verification, creating a methodological loophole despite sensitivity analysis.  
+
+MINOR CONCERNS:  
+1. **Presentation of I² and τ²**: Clarify that I² values in small-k settings are uninterpretable (as noted in Challenge 4) rather than reporting them without qualification.  
+2. **Reference gaps**: The placeholder citation for Li et al. (2025) requires updating; also, cite recent unit-of-analysis solutions (e.g., Fisher et al., 2023) for context.  
+3. **Parser limitations**: Explicitly note that the parser does not handle RevMan’s NMA or IPD structures, which could mislead readers expecting broader applicability.  
+
+RECOMMENDATION (0-5):  
+3  
+
+GRADE RATIONALE (1-2 sentences):  
+The paper introduces a valuable tool for reproducible evidence synthesis but requires revisions to clarify statistical limitations (e.g., I² reporting, robust variance estimation) and ensure transparency in data corrections. The adversarial verification framework and parser validation are strong, warranting minor revisions to strengthen methodological rigor.
+
+---
+### [E] Mistral-7B (OW/OR)
+**Model:** `meta-llama/llama-3.1-8b-instruct:free` | **Grade:** None | **Open-weight:** Yes | **Time:** 0.2s
+
+*ERROR: Error code: 404 - {'error': {'message': 'This model is unavailable for free. The paid version is available now - use this slug instead: meta-llama/llama-3.1-8b-instruct', 'code': 404}, 'user_id': 'user_[REDACTED]'}*
+
+---
+### [N] Gemini 1.5 Flash
+**Model:** `gemini-pro` | **Grade:** None | **Open-weight:** No | **Time:** 0.6s
+
+*ERROR: 404 Client Error: Not Found for url: https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=[REDACTED]*

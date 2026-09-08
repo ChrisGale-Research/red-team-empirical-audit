@@ -1,0 +1,80 @@
+{
+  "run_id": "20260622_083824",
+  "paper": "Resurrecting abandoned systematic reviews (Gale, Glue, Guaiana)",
+  "prompt_template": "You are a peer reviewer for Research Synthesis Methods (Wiley). You have received the following manuscript for review.\n\nPlease provide your review in exactly this structure:\n\nSUMMARY (2-3 sentences):\n<What the paper claims to contribute>\n\nMAJOR CONCERNS:\n<List each concern. For statistical issues, include specific numbers (e.g. tau² reliability at k=3, I² interpretation, unit-of-analysis inflation, Knapp-Hartung coverage). Be precise and technical.>\n\nMINOR CONCERNS:\n<Presentation, framing, reference gaps, or other secondary issues>\n\nRECOMMENDATION (0-5):\n<Single integer only>\n  0 = Hard reject (fatally flawed, no revision path)\n  1 = Reject (major problems, not salvageable in current form)\n  2 = Major revision (substantial problems but publishable concept)\n  3 = Minor revision (good paper, specific fixes needed)\n  4 = Accept with minor edits\n  5 = Accept as is\n\nGRADE RATIONALE (1-2 sentences):\n<Why this grade>\n\n---MANUSCRIPT BEGINS---\n\n[PAPER TEXT]\n\n---MANUSCRIPT ENDS---\n",
+  "reviews": [
+    {
+      "axis": "L",
+      "label": "Grok (xAI)",
+      "model": "grok-3",
+      "open_weight": false,
+      "status": "ERROR",
+      "grade": null,
+      "elapsed_s": 1.0,
+      "response": null,
+      "error": "Error code: 400 - {'code': 'invalid-argument', 'error': 'Incorrect API key provided. You can obtain an API key from https://console.x.ai.'}"
+    },
+    {
+      "axis": "L",
+      "label": "DeepSeek-R1 (OW)",
+      "model": "deepseek-reasoner",
+      "open_weight": true,
+      "status": "ERROR",
+      "grade": null,
+      "elapsed_s": 0.8,
+      "response": null,
+      "error": "Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ... is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}"
+    },
+    {
+      "axis": "M",
+      "label": "GPT-4o (OpenAI)",
+      "model": "gpt-4o",
+      "open_weight": false,
+      "status": "ERROR",
+      "grade": null,
+      "elapsed_s": 0.7,
+      "response": null,
+      "error": "Error code: 401 - {'error': {'message': 'Incorrect API key provided: .... You can find your API key at https://platform.openai.com/account/api-keys.', 'type': 'invalid_request_error', 'param': None, 'code': 'invalid_api_key'}}"
+    },
+    {
+      "axis": "M",
+      "label": "Qwen3-235B (OW via OpenRouter)",
+      "model": "qwen/qwen3-235b-a22b",
+      "open_weight": true,
+      "status": "ERROR",
+      "grade": null,
+      "elapsed_s": 0.2,
+      "response": null,
+      "error": "Error code: 401 - {'error': {'message': 'Missing Authentication header', 'code': 401}}"
+    },
+    {
+      "axis": "E",
+      "label": "Gemini 1.5 Pro (Google)",
+      "model": "gemini-1.5-pro",
+      "open_weight": false,
+      "status": "ERROR",
+      "grade": null,
+      "elapsed_s": 0.6,
+      "response": null,
+      "error": "400 Client Error: Bad Request for url: https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=[REDACTED]"
+    },
+    {
+      "axis": "E",
+      "label": "GLM-5 (OW via OpenRouter)",
+      "model": "z-ai/glm-5",
+      "open_weight": true,
+      "status": "ERROR",
+      "grade": null,
+      "elapsed_s": 0.2,
+      "response": null,
+      "error": "Error code: 401 - {'error': {'message': 'Missing Authentication header', 'code': 401}}"
+    }
+  ],
+  "summary": {
+    "grades": {},
+    "mean_grade": null,
+    "mean_open_weight": null,
+    "mean_proprietary": null,
+    "convergence": null
+  }
+}

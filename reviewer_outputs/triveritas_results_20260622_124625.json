@@ -1,0 +1,50 @@
+{
+  "run_id": "20260622_124625",
+  "paper": "Resurrecting abandoned systematic reviews (Gale, Glue, Guaiana)",
+  "reviews": [
+    {
+      "axis": "L",
+      "label": "DeepSeek-R1 (OW)",
+      "model": "deepseek-reasoner",
+      "open_weight": true,
+      "status": "OK",
+      "grade": null,
+      "elapsed_s": 26.4,
+      "response": "**SUMMARY (2-3 sentences):**  \nThis paper presents a reproducible R pipeline for native ingestion of RevMan 5 (.rm5) XML files, coupled with a pre-analysis adversarial verification framework. The pipeline is demonstrated on an abandoned Cochrane review comparing benzodiazepines versus pregabalin for GAD",
+      "error": null
+    },
+    {
+      "axis": "M",
+      "label": "Qwen3-235B (OW/OR)",
+      "model": "qwen/qwen3-235b-a22b",
+      "open_weight": true,
+      "status": "OK",
+      "grade": 0,
+      "elapsed_s": 26.9,
+      "response": "SUMMARY (2-3 sentences):\nThe paper presents a reproducible R pipeline for analyzing RevMan 5 (.rm5) files from abandoned systematic reviews. The pipeline reads RevMan 5 XML files natively, extracts outcome data with study-level metadata, applies structured adversarial verification, and produces metafor-based outputs. Demonstrated using an abandoned Cochrane review comparing benzodiazepines with pregabalin for GAD (k=3), the approach enables reproducible re-analysis of abandoned RevMan files with full audit trail and pre-registered adversarial challenge documentation.\n\nMAJOR CONCERNS:\n1. The analysis is based on only 3 studies (k=3), which creates critical limitations for reliable meta-analysis. The authors should:\n   - Emphasize the unreliability of τ² estimation at k=3 and avoid interpreting τ²=0 as evidence of homogeneity\n   - Remove quantitative interpretations of I² values given their instability at k=3\n   - Strengthen the cautionary language about interpreting results from k=3 in the abstract and conclusions\n   - Consider adding a forest plot with individual study estimates to visualize the limited data basis\n\n2. The unit-of-analysis problem from multiple arms sharing comparators requires more detailed analytical justification:\n   - Specify the exact random effects structure in the rma.mv() models\n   - Report the magnitude of changes in standard errors with cluster-robust approaches\n   - Discuss alternative approaches like collapsing across doses or network meta-analysis methods\n\n3. The adversarial verification framework needs more methodological grounding:\n   - Clarify the selection criteria for the five specific challenges\n   - Provide a rationale for determining which challenges required pipeline modifications\n   - Compare this approach to existing quality assurance frameworks in systematic review methodology\n\n4. The SD correction in Rickels 2005 requires stronger justification:\n   - Provide quantitative evidence that SD=0.8 is implausible (e.g., comparison to other studies)\n   - Clarify how the correction value was determined for each arm (specific n values used)\n   - Include the original publication verification as a sensitivity analysis\n\nMINOR CONCERNS:\n1. The paper would benefit from more methodological framing rather than clinical presentation\n2. The discussion should compare more directly to existing tools for working with RevMan files\n3. The paper should cite revtools and other R packages that interface with RevMan files\n4. More information is needed about XML structure handling and pipeline implementation\n5. The code availability statement needs updating with the actual Zenodo DOI\n6. The paper should include implementation guidance for other users\n\nRECOMMENDATION (0-5):\n2\n\nGRADE RATIONALE (1-2 sentences):\nThe paper presents an innovative contribution to reproducibility in systematic review methodology but requires major revisions to properly address the statistical limitations of working with k=3, strengthen the methodological justification of the adversarial verification framework, and clarify the handling of the unit-of-analysis problem. The small study count fundamentally limits the interpretability of the results and requires more cautious presentation throughout.",
+      "error": null
+    },
+    {
+      "axis": "E",
+      "label": "Llama-3.1-70B (OW/OR)",
+      "model": "meta-llama/llama-3.1-70b-instruct",
+      "open_weight": true,
+      "status": "OK",
+      "grade": 2,
+      "elapsed_s": 22.7,
+      "response": "**SUMMARY**\n\nThis manuscript presents a reproducible R pipeline for ingesting RevMan 5 XML files, extracting dichotomous and continuous outcome data, and applying structured adversarial verification prior to analysis. The pipeline is demonstrated using an abandoned Cochrane review comparing benzodiazepines with pregabalin for generalized anxiety disorder. The authors claim that their pipeline addresses three gaps in current evidence synthesis practice: source provenance without manual transcription, analysis reproducibility that survives the original analyst, and pre-analysis challenge documentation embedded in code.\n\n**MAJOR CONCERNS**\n\n1. **Unit-of-analysis problem**: The authors acknowledge the unit-of-analysis problem due to multiple pregabalin dose arms sharing a single benzodiazepine comparator arm per study. However, they do not provide a clear justification for their approach to addressing this issue, which may lead to biased estimates.\n2. **Small k**: The authors acknowledge that the small number of studies (k=3) may lead to unreliable estimates of τ². However, they do not provide a clear justification for their approach to addressing this issue, which may lead to biased estimates.\n3. **Knapp-Hartung adjustment**: The authors apply the Knapp-Hartung adjustment to account for the unreliability of REML τ² estimation at k ≤ 3 studies. However, they do not provide a clear justification for their choice of adjustment, and it is unclear whether this adjustment is sufficient to address the issue.\n4. **I² interpretation**: The authors report I² values, but do not provide a clear interpretation of these values in the context of their analysis.\n5. **Tau² reliability**: The authors do not provide a clear justification for their approach to estimating τ², which may lead to biased estimates.\n\n**MINOR CONCERNS**\n\n1. **Presentation**: The manuscript could benefit from clearer headings and subheadings to improve readability.\n2. **Framing**: The authors could provide more context on the importance of addressing abandoned systematic reviews and the potential benefits of their pipeline.\n3. **Reference gaps**: The authors could provide more references to support their claims about the limitations of current evidence synthesis practice.\n4. **Code availability**: The authors could provide more information on how to access the pipeline code and data.\n\n**RECOMMENDATION**\n\n2 (Major revision)\n\n**GRADE RATIONALE**\n\nThe manuscript presents an interesting and potentially useful pipeline for ingesting RevMan 5 XML files and applying structured adversarial verification. However, the authors need to address several major concerns, including the unit-of-analysis problem, small k, Knapp-Hartung adjustment, I² interpretation, and τ² reliability. Additionally, the authors could improve the presentation, framing, and reference gaps to make the manuscript more readable and convincing.",
+      "error": null
+    }
+  ],
+  "summary": {
+    "grades": {
+      "DeepSeek-R1 (OW)": null,
+      "Qwen3-235B (OW/OR)": 0,
+      "Llama-3.1-70B (OW/OR)": 2
+    },
+    "mean_all": 1.0,
+    "mean_open_weight": 1.0,
+    "mean_proprietary": null,
+    "spread": 2
+  }
+}

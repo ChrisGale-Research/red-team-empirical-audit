@@ -1,0 +1,60 @@
+{
+  "run_id": "20260622_113433",
+  "paper": "Resurrecting abandoned systematic reviews (Gale, Glue, Guaiana)",
+  "reviews": [
+    {
+      "axis": "L",
+      "label": "DeepSeek-R1 (OW)",
+      "model": "deepseek-reasoner",
+      "open_weight": true,
+      "status": "OK",
+      "grade": null,
+      "elapsed_s": 33.0,
+      "response": "**Review of: \"Resurrecting abandoned systematic reviews: a reproducible R pipeline for RevMan 5 files with structured adversarial verification\"**\n\n**SUMMARY (2-3 sentences):**  \nThe manuscript presents an R pipeline that natively parses RevMan 5 (.rm5) XML files, extracts dichotomous and continuous outcome data, and applies a pre-specified adversarial verification process before meta-analysis with metafor. It demonstrates the pipeline on an abandoned Cochrane review (benzodiazepines vs. pregabalin for GAD, k=3 studies) and claims improved reproducibility, provenance, and transparency over manual transcription. The primary methodological contributions are the native parser and the adversarial verification framework.\n\n**MAJOR CONCERNS:**\n\n1. **Unit-of-analysis inflation and I² reporting.** The pipeline treats multiple pregabalin dose arms per study as independent observations in the primary random‑effects model (e.g., k=7 arms for dropouts). The reported I² = 11% from an arm‑level model is not interpretable because it conflates within‑study and between‑study heterogeneity, and the arms share a common comparator. The authors correctly implement rma.mv() for clustering but still present arm‑level I² and τ² in Table 2 without clarifying that these quantities are biased by the artificial inflation of k. The I² and τ² from the multilevel model should be reported as primary, and arm‑level values relegated to sensitivity.\n\n2. **Knapp‑Hartung (K‑H) coverage at k=3.** The authors apply K‑H adjustment to some outcomes (e.g., dropouts) but not consistently to all reported estimates in Table 2. For outcomes with k=6 or 7 arms under the arm‑level model, the effective number of independent studies remains 3 (or fewer when clustering), so K‑H intervals should be used throughout, not only as a sensitivity. The primary inference should be based on the K‑H intervals, not the naïve z‑based CIs.\n\n3. **Pre‑analysis claim vs. retrospective reality.** The adversarial verification is presented as “pre‑analysis,” but the analysis was conducted on an already‑abandoned dataset; the challenges were evidently conceived after the data were available. This is not equivalent to prospective pre‑registration. The authors should explicitly acknowledge that the adversarial pass was designed retrospectively, and discuss how it differs from a truly pre‑registered challenge protocol.\n\n4. **Parser validation circularity.** The parser is validated by comparing parsed totals against RevMan’s own pre‑computed summary attributes within the same .rm5 file. If RevMan’s summaries are themselves computed from contaminated data (e.g., the Rickels SD error), the validation only confirms that the parser is internally consistent, not that the data are correct. The authors address the SD error separately, but the validation section overstates the strength of “exact agreement.”\n\n5. **Small‑k and τ² estimation.** REML is used for τ² despite k=3 independent studies. The authors note this limitation but still report p‑values from the standard random‑effects model without K‑H for most outcomes in Table 2. For example, the dropout p<0.001 is based on the naive model; the K‑H p=0.007 is reported only in a footnote. The primary p‑value should be from the K‑H model. Additionally, the HAM‑A outcome uses k=7 arms but only 3 studies; the τ²=0 is almost surely downward‑biased. The authors should either use a profile‑based CI for τ² or explicitly state that heterogeneity cannot be estimated reliably.\n\n6. **Missing diagnostic for clustering.** The rma.mv() sensitivity uses study as a random effect but does not report the intra‑study correlation or the variance‑covariance matrix of outcomes. For a multilevel model with k=7 observations and 3 clusters, the between‑cluster variance estimate is unstable. The authors should provide the estimated variance components and note that they are based on few clusters.\n\n7. **Generalizability claim unsupported.** The authors claim the parser works for “any .rm5 file” but have tested it on only one file from RevMan 5.3.4. Different RevMan versions (5.2, 5.4) or non‑Cochrane projects may use alternative XML node structures (e.g., SUBGROUP nesting, continuous data stored as mean/SE vs. mean/SD). The manuscript should report which node paths are assumed and test at least one additional .rm5 file (e.g., from the Cochrane archive) to substantiate the claim.\n\n**MINOR CONCERNS:**\n\n- The abstract states “I² values are uninterpretable” (adversarial challenge #4) but then Tables 1 and 2 prominently report I². Consider removing I² from primary tables or adding a clear caveat.\n- The phrase “pre‑registered adversarial challenge documentation” in the abstract is misleading; the challenges were not formally pre‑registered. Use “pre‑specified” or “documented prior to analysis.”\n- Li et al. (2025) reference is marked “to be confirmed.” This is a gap for a methods paper that cites a specific numeric rate.\n- The code repository is stated as “Zenodo DOI to be assigned.” The review cannot verify code quality or reproducibility; this should be a precondition for acceptance (code made available upon submission).\n- The “AI assistance” declaration is transparent, but the role of Claude in “adversarial verification structure” needs clarification: were the five challenges generated by the AI or by the authors? If the AI contributed to the challenge design, this should be described.\n- Table 2 includes a row",
+      "error": null
+    },
+    {
+      "axis": "M",
+      "label": "Qwen3-235B (OW/OR)",
+      "model": "qwen/qwen3-235b-a22b",
+      "open_weight": true,
+      "status": "OK",
+      "grade": 0,
+      "elapsed_s": 28.4,
+      "response": "SUMMARY (2-3 sentences):\nThe paper presents a reproducible R pipeline for analyzing RevMan 5 XML files from abandoned systematic reviews. It introduces structured adversarial verification before analysis and produces metafor-based outputs. The approach is demonstrated using an abandoned Cochrane review comparing benzodiazepines with pregabalin for generalized anxiety disorder.\n\nMAJOR CONCERNS:\n1. **Small k statistical issues**: With only k=3 studies, τ² estimation using REML is known to be unreliable, and I² values are uninterpretable. While the paper acknowledges this in adversarial verification, it continues to report and interpret these values in results without sufficient caution about their limitations.\n2. **Unit-of-analysis problem**: Although the paper addresses the issue of multiple pregabalin dose arms sharing a single benzodiazepine comparator through rma.mv() with study as a random effect, there's insufficient technical detail on model specification and remaining limitations.\n3. **Cluster-robust standard errors**: The paper mentions using rma.mv() as a sensitivity analysis but doesn't specify the exact model structure (random intercepts, covariance structure) or how this affects inference compared to standard models.\n4. **SD correction impact**: While the paper notes the SD correction changed the pooled HAM-A estimate by 0.08 points, it doesn't provide sufficient quantitative assessment of how this affected uncertainty estimates or model assumptions.\n\nMINOR CONCERNS:\n1. **Presentation and framing**: The paper would benefit from clearer emphasis on its methodological contribution rather than clinical findings, given the small k and uniform sponsorship.\n2. **Reference gaps**: Missing citations include PRISMA-S extension for searching and selecting studies for systematic reviews.\n3. **Clarification of adversarial verification**: The concept needs better contextualization within existing quality assurance frameworks and comparison with approaches like pre-registration.\n4. **Formatting inconsistencies**: Some inconsistencies exist in the use of \"k\" (number of studies vs. number of comparison arms) and table formatting could be improved.\n\nRECOMMENDATION (0-5):\n3\n\nGRADE RATIONALE (1-2 sentences):\nThe paper presents a valuable methodological contribution with a reproducible R pipeline for analyzing RevMan 5 files. The approach addresses important gaps in reproducibility and transparency, but requires revisions to strengthen statistical reporting and interpretation given the small k and unit-of-analysis issues.",
+      "error": null
+    },
+    {
+      "axis": "E",
+      "label": "GLM-5 (OW/OR)",
+      "model": "z-ai/glm-5",
+      "open_weight": true,
+      "status": "ERROR",
+      "grade": null,
+      "elapsed_s": 21.2,
+      "response": null,
+      "error": "'NoneType' object has no attribute 'splitlines'"
+    },
+    {
+      "axis": "N",
+      "label": "Gemini 2.0 Flash",
+      "model": "gemini-2.0-flash",
+      "open_weight": false,
+      "status": "ERROR",
+      "grade": null,
+      "elapsed_s": 0.7,
+      "response": null,
+      "error": "429 Client Error: Too Many Requests for url: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=[REDACTED]"
+    }
+  ],
+  "summary": {
+    "grades": {
+      "DeepSeek-R1 (OW)": null,
+      "Qwen3-235B (OW/OR)": 0
+    },
+    "mean_all": 0.0,
+    "mean_open_weight": 0.0,
+    "mean_proprietary": null,
+    "spread": null
+  }
+}
