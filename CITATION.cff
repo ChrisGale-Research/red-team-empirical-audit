@@ -1,6 +1,6 @@
 cff-version: 1.2.0
 message: "If you use this software or data, please cite it using the metadata below."
-title: "Structured adversarial verification for secondary analysis of abandoned systematic reviews: a worked example"
+title: "Automated post-hoc testing of archived systematic review data: code, data, model outputs and manuscripts"
 abstract: >-
   Code, source RevMan 5 project file, and manuscript for a worked example
   applying a multi-model adversarial verification pass to the secondary
@@ -10,8 +10,8 @@ abstract: >-
   runs the meta-analysis in metafor, and subjects the load-bearing claims
   to a structured adversarial pass.
 type: software
-version: 1.1.0
-date-released: "2026-09-08"
+version: 1.2.1
+date-released: "2026-10-26"
 authors:
   - family-names: Gale
     given-names: Christopher K
@@ -24,7 +24,7 @@ authors:
   - family-names: Guaiana
     given-names: Giuseppe
     orcid: "https://orcid.org/0000-0003-1054-2201"
-    affiliation: "Department of Psychiatry, Schulich School of Medicine and Dentistry, Western University, London, Ontario, Canada"
+    affiliation: "Saint Thomas Elgin General Hospital, University of Western Ontario, Ontario, Canada"
 license: MIT
 repository-code: "https://github.com/ChrisGale-Research/red-team-empirical-audit"
 identifiers:
